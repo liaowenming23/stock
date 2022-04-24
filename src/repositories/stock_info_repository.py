@@ -1,4 +1,3 @@
-from datetime import datetime
 from mysql.connector import MySQLConnection
 from src.models.stock_info import StockInfo
 from src.repositories.sql_connector import MySqlConnector
@@ -37,10 +36,27 @@ class StockInfoRepository():
         cursor.close()
         return stock_info
 
-    # def __del__(self):
-    #     if self.db != None:
-    #         self.db.close()
-    # def get_stock_info
+    def get_stock_info_by_industry_type(self, industry_type: int):
+        cursor = self.db.cursor()
+        cursor.execute("""
+            select id, stock_code, stock_name, industry_type, create_time
+            from `stock_info`
+            where industry_type = %s;
+           """, (industry_type,))
+        rows = cursor.fetchall()
+        if rows is None:
+            return None
+        stock_infos: list[StockInfo] = []
+        for row in rows:
+            stock_info = StockInfo()
+            stock_info.id = int(row[0])
+            stock_info.stock_code = str(row[1])
+            stock_info.stock_name = str(row[2])
+            stock_info.industry_type = int(row[3])
+            stock_info.create_time = row[4]
+            stock_infos.append(stock_info)
+        cursor.close()
+        return stock_infos
 
 
 def main():
