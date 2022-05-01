@@ -15,3 +15,8 @@ create table stock_revenue(
     `month` smallint NOT NULL,
     revenue_by_million int NOT NULL
 )
+
+create table stock_industry (
+  id int NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  `name` int NOT NULL
+)

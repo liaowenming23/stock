@@ -2,9 +2,10 @@ import time
 import requests
 from decimal import Decimal
 from bs4 import BeautifulSoup, Tag
-from src.models.stock_info import IndustryType, StockInfo
+from src.models.stock_info import StockInfo
 from src.models.stock_revenue_record import StockRevenueRecord
 from src.repositories.sql_connector import MySqlConnector
+from src.repositories.stock_industry_repository import StockIndustryRepository
 from src.repositories.stock_info_repository import StockInfoRepository
 from src.repositories.stock_revenue_repository import StockRevenueRecordRepository
 GOODINFO_URL = "https://goodinfo.tw/tw/ShowSaleMonChart.asp?STOCK_ID={0}"
@@ -19,6 +20,8 @@ def get_monthly_revenue(stock_info: StockInfo):
     resp.encoding = "utf-8"
     soup = BeautifulSoup(resp.text, "lxml")
     table = soup.find("div", {"id": "divDetail"})
+    if table is None:
+        return None
     records: list[StockRevenueRecord] = []
     for row in table.find_all("tr", {"align": "center"}):
         cols = row.find_all("nobr")
@@ -54,15 +57,22 @@ def add_to_database(conntor: MySqlConnector, records: list[StockRevenueRecord]):
 def spider():
     conntor = MySqlConnector("localhost", "stock", "root", "wenming01")
     stock_info_rep = StockInfoRepository(conntor)
-    stock_infos = stock_info_rep.get_stock_info_by_industry_type(
-        IndustryType.Semiconductor.value)
-    for stock_info in stock_infos:
-        records = get_monthly_revenue(stock_info)
-        add_to_database(conntor, records)
-        time.sleep(5)
+    industry_rep = StockIndustryRepository(conntor)
+    industries = industry_rep.get_all_industry()
+    industries = list(filter(lambda i: i.id > 15, industries))
+    for industry in industries:
+        stock_infos = stock_info_rep.get_stock_info_by_industry_type(
+            industry.id)
+        for stock_info in stock_infos:
+            records = get_monthly_revenue(stock_info)
+            if records is None:
+                continue
+            add_to_database(conntor, records)
+            time.sleep(3)
 
 
 def main():
+    print("run spider")
     spider()
 
 

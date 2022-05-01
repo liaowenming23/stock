@@ -1,9 +1,8 @@
 from datetime import datetime
-from enum import Enum
 
 
-class IndustryType(Enum):
-    Semiconductor = 1  # 半導體
+# class IndustryType(Enum):
+#     Semiconductor = 1  # 半導體
 
 
 class StockInfo():
